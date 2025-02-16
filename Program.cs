@@ -7,7 +7,6 @@ using System.IO;
 using System.Threading;
 using Microsoft.Extensions.Configuration;
 
-
 namespace DNWS
 {
     // Main class
@@ -245,7 +244,6 @@ namespace DNWS
         protected int _port;
         protected Program _parent;
         protected Socket serverSocket;
-        protected Socket clientSocket;
         private static DotNetWebServer _instance = null;
         protected int id;
 
@@ -293,11 +291,13 @@ namespace DNWS
                 try
                 {
                     // Wait for client
-                    clientSocket = serverSocket.Accept();
+                    Socket clientSocket = serverSocket.Accept();
                     // Get one, show some info
                     _parent.Log("Client accepted:" + clientSocket.RemoteEndPoint.ToString());
                     HTTPProcessor hp = new HTTPProcessor(clientSocket, _parent);
-                    hp.Process();
+                    TaskInfo ti = new TaskInfo(hp);
+                    Thread clientThread = new Thread(new ParameterizedThreadStart(ThreadProc));
+                    clientThread.Start(ti);
                 }
                 catch (Exception ex)
                 {
